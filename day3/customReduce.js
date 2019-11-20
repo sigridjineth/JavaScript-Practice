@@ -1,17 +1,21 @@
 //customReduce 함수 구현
-Array.prototype.customReduce = function(callback, initValue){
+Array.prototype.customReduce = function(callback, initValue) {
     let accumulator = '';
-    if (initValue !== undefined){
+    if (initValue !== undefined) {
         accumulator = initValue;
     }
-    for (i = 0; i < this.length; i++){
-        accumulator = callback.call(this, accumulator);
-    }
+    for (i = 0; i < this.length; i++) {
+        accumulator = callback.call(Array, accumulator, this[i], i, this);
+        console.log(accumulator);
+    } //undefined로 설정하면 전역객체라는 뜻. Array로 설정하면, Array라는 객체에 적용된다는 뜻.
+    return accumulator;
 };
 
 //test function
-var add = function(a, b){
-    return a + b;
-};
+const strArr = ['I', 'like', 'eating'];
 
-//https://github.com/kaleongtong/CustomReduce/blob/master/cusReduce.js
+let custStr = strArr.customReduce(function(a, b, c, d) {
+    return b + " " + a;
+});
+
+console.log(custStr);
