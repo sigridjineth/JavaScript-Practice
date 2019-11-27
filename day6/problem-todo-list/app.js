@@ -9,8 +9,8 @@ const R = readline.createInterface({
 });
 R.setPrompt('명령하세요: ');
 R.prompt();
-R.on('line', function(input) {
-    const newInput = line.split('$$');
+R.on('line', async function(input) {
+    const newInput = input.split('$$');
     switch (newInput[0]) {
         case "show":
             show(newInput[1]);
@@ -20,20 +20,29 @@ R.on('line', function(input) {
             showCurrent();
             break;
         case "update":
-            jsonData = update(newInput[1]);
-            showCurrent();
+            newData = await update(newInput[1], newInput[2]);
+            if (jsonData === newData) {
+                console.log('잘못된 ID를 입력하셨습니다.')
+                showCurrent();
+            } else {
+                jsonData = newData;
+                showCurrent();
+            }
             break;
         case "delete":
             jsonData = del(newInput[1]);
+            console.log(jsonData)
             showCurrent();
             break;
         case "q":
             console.log("프로그램 종료");
+            process.exit();
             break;
         default:
             console.log("잘못된 명령을 입력하셨습니다")
             break;
     };
+    R.prompt();
 });
 
 //보여주는 부분의 입력을 처리하는 부분
@@ -42,16 +51,25 @@ var show = function(status) {
     if (status === "current") {
         showCurrent(); //showCurrent 모듈로 넘기기
     } else if (avail.includes(status)) {
-        const result = jsonData.filter(function(event) {
+        let result = jsonData.filter(function(event) {
             return event.status === status;
         });
-        //reduce 함수를 사용하여 todo 재구현이 필요함
-        const out = result.reduce(function(acc, cur) {
-            acc.push(cur);
-            const print = (`${status}리스트: ${out.length}건: '${cur.name}, ${cur.id}`);
-            return print;
-        }, []);
-        console.log(out);
+        let out = result.reduce(function(list, cur) {
+            list.id.push(cur.id);
+            list.name.push(cur.name);
+            return list;
+        }, { name: [], id: [] });
+        var print = function() {
+            var result = [];
+            for (i = 0; i < out.name.length; i++) {
+                let name = out.name[i];
+                let id = out.id[i];
+                result.push(name + "," + id + " ");
+            };
+            console.log(result);
+            return console.log(`${status}리스트: 총 ${result.length}건:`, result);
+        };
+        print();
     } else {
         console.log('input Error!');
     }
@@ -62,11 +80,11 @@ var showCurrent = function() {
         list[cur.status].push(cur.id);
         return list;
     }, { todo: [], doing: [], done: [] })
-    console.log(`현재상태: todo: [${state.todo}], doing: [${state.doing}], done: [${state.todo}]`);
+    console.log(`현재상태: todo: [${state.todo}], doing: [${state.doing}], done: [${state.done}]`);
 };
 
 //추가를 만드는 함수
-var add = function(name, tag) {
+var add = function(name, tags) {
     let newObject = function() {
         return {
             name: "",
@@ -74,12 +92,14 @@ var add = function(name, tag) {
             status: "doing",
             id: makeID()
         }
-    };
-    newObject.name = name;
-    newObject.tag = tag;
-    jsonData.push(newObject);
-    console.log(`${name}이 추가되었습니다.(id: ${id})`);
-    return newObject;
+    }; //생성자 함수
+
+    let obj = newObject();
+    obj.name = name;
+    obj.tags = tags;
+    jsonData.push(obj);
+    console.log(`${obj.name}이 추가되었습니다. (id: ${obj.id})`);
+    return jsonData;
 };
 
 //ID를 만드는 함수
@@ -88,29 +108,32 @@ var makeID = function() {
     const ids = jsonData.map(function(e) {
         idarray.push(e.id);
     });
-    let newID = function() {
+
+    var checkID = function() {
         let ID = Math.floor(Math.random() * 10) + 1;
-        return ID;
+        const criteria = function(e) {
+            return e != ID;
+        }
+        let check = ids.every(criteria);
+        if (check) {
+            return ID;
+        } else {
+            checkID();
+        }
     };
-    while (idarray.includes(newID())) {
-        newID();
-        continue;
-    };
-    return newID;
+    return checkID();
 };
 
 //업데이트를 이끄는 함수
 var update = function(id, status) {
     //2초 이후에 받는다
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve, reject) {
         setTimeout(function() {
             const newStatus = jsonData.map(function(e) {
                 if (e.id == id) {
                     e.status = status;
-                    console.log(`${e.name} ${e.status}으로 상태가 변경되었습니다.`);
-                } else {
-                    console.log(`잘못된 ID를 입력하셨습니다.`);
-                };
+                    console.log(`${e.name} ${status}으로 상태가 변경되었습니다.`);
+                }
                 return e;
             });
             resolve(newStatus);
