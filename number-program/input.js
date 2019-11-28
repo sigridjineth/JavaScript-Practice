@@ -4,7 +4,8 @@ const judge = require('./judge.js');
 //컴퓨터 단을 구현
 var computerChoose = function() {
     const uuidv1 = require('uuid/v1');
-    app.game.computerNumber += uuidv1().slice(-1, -6).replace(/[^0-9]/g, '');
+    number = uuidv1().slice(-1, -6).replace(/[^0-9]/g, '');
+    app.game.computerNumber += number;
 };
 
 //사용자 입력을 구현

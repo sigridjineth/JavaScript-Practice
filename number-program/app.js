@@ -12,6 +12,7 @@ module.exports = { game }
 
 var main = function() {
     input.computerChoose();
+    console.log(game.computerNumber);
     judgeGame.checkresult(input.userInput());
 }
 main();
