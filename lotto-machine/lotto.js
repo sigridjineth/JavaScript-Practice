@@ -1,25 +1,74 @@
-//로또 생성기
-
-//1. 구매하는 돈을 입력하는 함수
-//2. 돈의 유효성을 검사하는 메소드
-//3. 구매 가능한 로또의 수를 출력하는 메소드
-//1+2+3 = 로또 구매함수
-var buylottos = function(money) {
-    var minAmount = 1000;
-    var validateMoney = function(minAmount) {
-        //
+class Lotto {
+    constructor() {
+        this.money = 0;
+        this.list = [];
+        this.winTable = {
+            3: {
+                winNum: 0,
+                prize: 5000
+            },
+            4: {
+                winNum: 0,
+                prize: 50000
+            },
+            5: {
+                winNum: 0,
+                prize: 1500000
+            },
+            6: {
+                winNum: 0,
+                prize: 2000000000
+            }
+        };
     }
-    if (validateMoney(1000)) {
-        var amount = money % 1000
+    buylotto(money) {
+        this.money = money;
+        const lottoAmount = Math.floor(money / 1000);
+        for (let i = 0; i < lottoAmount; i++) {
+            this.list.push(this.createlotto());
+        };
+        this.print();
     };
-}
-
-//4. 로또의 조합을 임의로 조합하여 만드는 함수
-//5. 랜덤 숫자를 만드는 메소드
-//4+5 = 로또 제작함수
-
-//6. 당첨번호를 입력받고 유효성을 확인하는 메소드
-//7. 당첨을 확인하여 결과를 얻는 함수
-//8. 당첨 통계를 내고 이를 출력하는 함수
-//9. 수익률을 계산하는 함수
-//6+7+8+9 = 당첨통계 출력함수
+    createlotto() {
+        const lottolist = [];
+        const numlist = new Array(45).fill(0).map(function(num, i) {
+            return i + 1;
+        });
+        for (let i = 0; i < 6; i++) {
+            const randNum = Math.floor(Math.random() * numlist.length);
+            const lottoNumber = numlist.splice(randNum, 1)[0];
+            lottolist.push(lottoNumber);
+        };
+        return lottolist.sort(function(a, b) {
+            return a - b;
+        });
+    };
+    setluckyNumber(array) {
+        this.matchNumber(this.list, array);
+        let profitRate = this.profitsRate();
+        return profitRate;
+    };
+    matchNumber(lottolist, luckyarray) {
+        for (let lottoNum of lottolist) {
+            let count = 0;
+            lottoNum.forEach(function(number) {
+                return luckyarray.some(function(luckynumber) {
+                    return luckynumber === number ? count++ : count;
+                });
+            });
+            if (count > 2) {
+                this.winTable[count].winNum++;
+            };
+        };
+    };
+    profitsRate() {
+        let totalPrize = this.sumPrize();
+        return ((totalPrize) / this.money) * 100;
+    };
+    sumPrize() {
+        const totalPrize = Object.keys(this.winTable).reduce(function(total, count) {
+            return total += this.winTable[count].winNum * this.winTable[count].prize;
+        }, 0);
+        return totalPrize;
+    };
+};
